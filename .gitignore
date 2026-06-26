@@ -1,0 +1,14 @@
+/config/database.php
+/config/app.php
+/install.lock
+/public/uploads/*
+!/public/uploads/.gitkeep
+!/public/uploads/hymns/
+!/public/uploads/tunes/
+!/public/uploads/hymns/.gitkeep
+!/public/uploads/tunes/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+.DS_Store
+Thumbs.db
+
