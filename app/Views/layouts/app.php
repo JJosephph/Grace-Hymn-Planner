@@ -13,6 +13,7 @@ $messages = $isAuthPage ? [] : flash();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo e(($title ?? 'Grace Hymn Planner') . '｜Grace Hymn Planner'); ?></title>
     <link rel="stylesheet" href="<?php echo e(asset('app.css')); ?>">
+    <script>window.GHP_SEARCH_URL = <?php echo json_encode(url('/search'), JSON_UNESCAPED_SLASHES); ?>;</script>
 </head>
 <body>
 <?php if ($isAuthPage): ?>

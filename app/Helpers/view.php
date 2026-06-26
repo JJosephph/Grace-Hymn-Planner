@@ -32,7 +32,51 @@ function public_file_url(?string $path): string
 
 function url(string $path = ''): string
 {
-    return '/' . ltrim($path, '/');
+    if ($path === '') {
+        $path = '/';
+    }
+
+    if (preg_match('#^https?://#', $path)) {
+        return $path;
+    }
+
+    if (strpos($path, '/index.php') === 0 || (defined('ROUTE_URL_MODE') && ROUTE_URL_MODE !== 'query')) {
+        return '/' . ltrim($path, '/');
+    }
+
+    $parts = parse_url($path);
+    $route = '/' . ltrim($parts['path'] ?? '/', '/');
+    if ($route === '//') {
+        $route = '/';
+    }
+
+    if ($route === '/') {
+        return '/index.php';
+    }
+
+    $query = $parts['query'] ?? '';
+    return '/index.php?r=' . rawurlencode($route) . ($query !== '' ? '&' . $query : '');
+}
+
+function rewrite_route_links(string $html): string
+{
+    if (!defined('ROUTE_URL_MODE') || ROUTE_URL_MODE !== 'query') {
+        return $html;
+    }
+
+    $routePrefixes = ['login', 'logout', 'search', 'hymns', 'tunes', 'tags', 'plans', 'files'];
+
+    return preg_replace_callback('/\b(href|action|data-drawer-url)="(\/[^"]*)"/', function (array $matches) use ($routePrefixes): string {
+        $attribute = $matches[1];
+        $path = $matches[2];
+        $trimmed = ltrim($path, '/');
+
+        if ($path === '/' || in_array(strtok($trimmed, '/?'), $routePrefixes, true)) {
+            return $attribute . '="' . e(url($path)) . '"';
+        }
+
+        return $matches[0];
+    }, $html);
 }
 
 function is_active_nav(string $prefix): string

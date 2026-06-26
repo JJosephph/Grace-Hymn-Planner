@@ -88,7 +88,8 @@
           results.innerHTML = '';
           return;
         }
-        fetch('/search?q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } })
+        var separator = (window.GHP_SEARCH_URL || '/search').indexOf('?') === -1 ? '?' : '&';
+        fetch((window.GHP_SEARCH_URL || '/search') + separator + 'q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } })
           .then(function (response) { return response.json(); })
           .then(function (payload) {
             results.innerHTML = '';
@@ -108,4 +109,3 @@
     });
   }
 })();
-

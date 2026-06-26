@@ -16,6 +16,8 @@ $success = false;
 $publicUrlPrefix = defined('PUBLIC_URL_PREFIX')
     ? rtrim(PUBLIC_URL_PREFIX, '/')
     : (strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/public/') !== false ? '' : '/public');
+$queryRouteMode = (defined('ROUTE_URL_MODE') && ROUTE_URL_MODE === 'query')
+    || strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/install/') !== false;
 $baseTables = [
     'users',
     'tunes',
@@ -78,6 +80,16 @@ function prefix_sql_tables(string $sql, string $prefix, array $tables): string
     }
 
     return $sql;
+}
+
+function install_route_url(string $path, bool $queryRouteMode): string
+{
+    if (!$queryRouteMode) {
+        return '/' . ltrim($path, '/');
+    }
+
+    $route = '/' . ltrim($path, '/');
+    return $route === '/' ? '/index.php' : '/index.php?r=' . rawurlencode($route);
 }
 
 function split_sql_statements(string $sql): array
@@ -220,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <?php if ($success): ?>
             <div class="alert success">安装完成，可以进入系统登录。</div>
-            <a class="btn primary" href="/login">进入登录</a>
+            <a class="btn primary" href="<?php echo install_e(install_route_url('/login', $queryRouteMode)); ?>">进入登录</a>
         <?php else: ?>
             <?php if ($errors): ?>
                 <div class="alert danger">

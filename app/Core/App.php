@@ -19,6 +19,9 @@ class App
         }
 
         $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+        if (!empty($_GET['r']) && is_string($_GET['r'])) {
+            $path = '/' . ltrim($_GET['r'], '/');
+        }
         if ($path === '/install' || strpos($path, '/install/') === 0) {
             require BASE_PATH . '/install/index.php';
             return;
@@ -78,4 +81,3 @@ class App
         $router->get('/plans/{id}/export', [ServicePlanController::class, 'export']);
     }
 }
-
