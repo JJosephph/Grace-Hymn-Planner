@@ -44,7 +44,6 @@ class FileController extends Controller
 
     public function downloadHymnFile(string $id): void
     {
-        Auth::requireLogin();
         $file = (new File())->findHymnFile((int) $id);
         if (!$file) {
             http_response_code(404);
@@ -84,4 +83,3 @@ class FileController extends Controller
         $this->redirect('/hymns');
     }
 }
-

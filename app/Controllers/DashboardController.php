@@ -12,8 +12,6 @@ class DashboardController extends Controller
 {
     public function index(): void
     {
-        Auth::requireLogin();
-
         $hymns = new Hymn();
         $plans = new ServicePlan();
         $tags = new Tag();
@@ -31,10 +29,8 @@ class DashboardController extends Controller
 
     public function search(): void
     {
-        Auth::requireLogin();
         $q = trim($_GET['q'] ?? '');
         $hymns = (new Hymn())->search(['q' => $q]);
         $this->json(['items' => array_slice($hymns, 0, 12)]);
     }
 }
-

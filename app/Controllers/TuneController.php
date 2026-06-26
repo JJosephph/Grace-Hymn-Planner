@@ -11,7 +11,6 @@ class TuneController extends Controller
 {
     public function index(): void
     {
-        Auth::requireLogin();
         $this->view('tunes/index', ['title' => '曲调管理', 'tunes' => (new Tune())->all()]);
     }
 
@@ -32,7 +31,6 @@ class TuneController extends Controller
 
     public function show(string $id): void
     {
-        Auth::requireLogin();
         $tune = (new Tune())->find((int) $id);
         if (!$tune) {
             http_response_code(404);
@@ -63,4 +61,3 @@ class TuneController extends Controller
         $this->redirect('/tunes/' . (int) $id);
     }
 }
-

@@ -30,11 +30,15 @@ $messages = $isAuthPage ? [] : flash();
                 <?php if (Auth::canEdit()): ?>
                     <a class="btn primary" href="/hymns/create">新增圣诗</a>
                 <?php endif; ?>
-                <span class="user-pill"><?php echo e($user['nickname'] ?? ''); ?></span>
-                <form method="post" action="/logout">
-                    <?php echo Csrf::input(); ?>
-                    <button class="btn ghost" type="submit">退出</button>
-                </form>
+                <?php if ($user): ?>
+                    <span class="user-pill"><?php echo e($user['nickname'] ?? ''); ?></span>
+                    <form method="post" action="/logout">
+                        <?php echo Csrf::input(); ?>
+                        <button class="btn ghost" type="submit">退出</button>
+                    </form>
+                <?php else: ?>
+                    <a class="btn ghost" href="/login">登录</a>
+                <?php endif; ?>
             </div>
         </header>
 

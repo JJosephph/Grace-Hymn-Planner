@@ -14,8 +14,6 @@ class HymnController extends Controller
 {
     public function index(): void
     {
-        Auth::requireLogin();
-
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
             'status' => trim($_GET['status'] ?? ''),
@@ -61,7 +59,6 @@ class HymnController extends Controller
 
     public function show(string $id): void
     {
-        Auth::requireLogin();
         $hymn = (new Hymn())->find((int) $id);
         if (!$hymn) {
             http_response_code(404);
@@ -133,4 +130,3 @@ class HymnController extends Controller
         $this->view($view, $data);
     }
 }
-

@@ -12,7 +12,6 @@ class ServicePlanController extends Controller
 {
     public function index(): void
     {
-        Auth::requireLogin();
         $this->view('service_plans/index', ['title' => '本周选诗', 'plans' => (new ServicePlan())->all()]);
     }
 
@@ -46,7 +45,6 @@ class ServicePlanController extends Controller
 
     public function show(string $id): void
     {
-        Auth::requireLogin();
         $plan = (new ServicePlan())->find((int) $id);
         if (!$plan) {
             http_response_code(404);
@@ -99,7 +97,6 @@ class ServicePlanController extends Controller
 
     public function export(string $id): void
     {
-        Auth::requireLogin();
         $planModel = new ServicePlan();
         $plan = $planModel->find((int) $id);
         if (!$plan) {
@@ -137,4 +134,3 @@ class ServicePlanController extends Controller
         exit;
     }
 }
-
