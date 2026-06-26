@@ -2,7 +2,32 @@
 
 function asset(string $path): string
 {
-    return '/assets/' . ltrim($path, '/');
+    return public_url('/assets/' . ltrim($path, '/'));
+}
+
+function public_url(string $path): string
+{
+    $path = '/' . ltrim($path, '/');
+    $prefix = defined('PUBLIC_URL_PREFIX') ? rtrim(PUBLIC_URL_PREFIX, '/') : '';
+
+    if ($prefix !== '' && strpos($path, $prefix . '/') === 0) {
+        return $path;
+    }
+
+    return $prefix . $path;
+}
+
+function public_file_url(?string $path): string
+{
+    if (!$path) {
+        return '';
+    }
+
+    if (preg_match('#^https?://#', $path)) {
+        return $path;
+    }
+
+    return public_url($path);
 }
 
 function url(string $path = ''): string

@@ -74,8 +74,8 @@
     <div class="file-grid">
         <?php foreach ($hymn['files'] as $file): ?>
             <article class="file-item">
-                <?php if ($file['file_type'] === 'score_image'): ?><img src="<?php echo e($file['file_path']); ?>" alt="<?php echo e($file['original_name']); ?>"><?php endif; ?>
-                <?php if ($file['file_type'] === 'score_pdf'): ?><embed src="<?php echo e($file['file_path']); ?>" type="application/pdf"><?php endif; ?>
+                <?php if ($file['file_type'] === 'score_image'): ?><img src="<?php echo e(public_file_url($file['file_path'])); ?>" alt="<?php echo e($file['original_name']); ?>"><?php endif; ?>
+                <?php if ($file['file_type'] === 'score_pdf'): ?><embed src="<?php echo e(public_file_url($file['file_path'])); ?>" type="application/pdf"><?php endif; ?>
                 <strong><?php echo e($file['original_name']); ?></strong>
                 <a class="btn" href="/files/<?php echo (int) $file['id']; ?>/download">下载</a>
             </article>
@@ -90,4 +90,3 @@
         <form method="post" action="/hymns/<?php echo (int) $hymn['id']; ?>/delete"><?php echo Csrf::input(); ?><button class="btn danger" type="submit">归档删除</button></form>
     </section>
 <?php endif; ?>
-

@@ -129,9 +129,9 @@ $selectedTags = $selectedTags ?? [];
             <?php foreach ($hymn['files'] as $file): ?>
                 <article class="file-item">
                     <?php if ($file['file_type'] === 'score_image'): ?>
-                        <img src="<?php echo e($file['file_path']); ?>" alt="<?php echo e($file['original_name']); ?>">
+                        <img src="<?php echo e(public_file_url($file['file_path'])); ?>" alt="<?php echo e($file['original_name']); ?>">
                     <?php elseif ($file['file_type'] === 'score_pdf'): ?>
-                        <embed src="<?php echo e($file['file_path']); ?>" type="application/pdf">
+                        <embed src="<?php echo e(public_file_url($file['file_path'])); ?>" type="application/pdf">
                     <?php endif; ?>
                     <strong><?php echo e($file['original_name']); ?></strong>
                     <span><?php echo e($file['file_type']); ?></span>
@@ -147,4 +147,3 @@ $selectedTags = $selectedTags ?? [];
         </div>
     </section>
 <?php endif; ?>
-

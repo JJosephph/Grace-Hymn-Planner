@@ -1,6 +1,13 @@
 <?php
 
-define('BASE_PATH', dirname(__DIR__));
+if (!defined('BASE_PATH')) {
+    define('BASE_PATH', dirname(__DIR__));
+}
+
+if (!defined('PUBLIC_URL_PREFIX')) {
+    $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+    define('PUBLIC_URL_PREFIX', strpos($scriptName, '/public/') !== false ? '/public' : '');
+}
 
 require BASE_PATH . '/app/Helpers/escape.php';
 require BASE_PATH . '/app/Helpers/view.php';
@@ -21,4 +28,3 @@ spl_autoload_register(function (string $class): void {
 });
 
 App\Core\App::run();
-

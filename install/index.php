@@ -13,6 +13,9 @@ $configDir = BASE_PATH . '/config';
 $uploadDir = BASE_PATH . '/public/uploads';
 $errors = [];
 $success = false;
+$publicUrlPrefix = defined('PUBLIC_URL_PREFIX')
+    ? rtrim(PUBLIC_URL_PREFIX, '/')
+    : (strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/public/') !== false ? '' : '/public');
 
 function install_e($value): string
 {
@@ -153,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>安装 Grace Hymn Planner</title>
-    <link rel="stylesheet" href="/assets/app.css">
+    <link rel="stylesheet" href="<?php echo install_e($publicUrlPrefix . '/assets/app.css'); ?>">
 </head>
 <body class="install-page">
 <main class="install-wrap">
@@ -203,4 +206,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </main>
 </body>
 </html>
-
