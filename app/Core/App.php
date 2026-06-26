@@ -21,6 +21,8 @@ class App
         $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
         if (!empty($_GET['r']) && is_string($_GET['r'])) {
             $path = '/' . ltrim($_GET['r'], '/');
+        } elseif ($path === '/index.php' || substr($path, -10) === '/index.php') {
+            $path = '/';
         }
         if ($path === '/install' || strpos($path, '/install/') === 0) {
             require BASE_PATH . '/install/index.php';
