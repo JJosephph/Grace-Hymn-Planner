@@ -16,6 +16,20 @@ $success = false;
 $publicUrlPrefix = defined('PUBLIC_URL_PREFIX')
     ? rtrim(PUBLIC_URL_PREFIX, '/')
     : (strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/public/') !== false ? '' : '/public');
+$baseTables = [
+    'users',
+    'tunes',
+    'hymns',
+    'tag_groups',
+    'tags',
+    'hymn_tag',
+    'hymn_files',
+    'tune_files',
+    'service_plans',
+    'service_plan_items',
+    'settings',
+    'activity_logs',
+];
 
 function install_e($value): string
 {
@@ -33,6 +47,37 @@ function check_writable_dir(string $path): bool
 function slugify_tag_code(string $name): string
 {
     return 'tag_' . substr(md5($name), 0, 12);
+}
+
+function sanitize_table_prefix(string $prefix): string
+{
+    $prefix = trim($prefix);
+    if ($prefix === '') {
+        throw new InvalidArgumentException('表前缀不能为空。');
+    }
+
+    if (!preg_match('/^[A-Za-z][A-Za-z0-9_]{0,30}$/', $prefix)) {
+        throw new InvalidArgumentException('表前缀只能包含英文字母、数字和下划线，并且必须以字母开头。');
+    }
+
+    return $prefix;
+}
+
+function prefix_sql_tables(string $sql, string $prefix, array $tables): string
+{
+    if ($prefix === '') {
+        return $sql;
+    }
+
+    usort($tables, function (string $a, string $b): int {
+        return strlen($b) <=> strlen($a);
+    });
+
+    foreach ($tables as $table) {
+        $sql = preg_replace('/(?<![A-Za-z0-9_])' . preg_quote($table, '/') . '(?![A-Za-z0-9_])/', $prefix . $table, $sql);
+    }
+
+    return $sql;
 }
 
 function split_sql_statements(string $sql): array
@@ -98,12 +143,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $database = trim($_POST['database'] ?? '');
     $username = trim($_POST['db_username'] ?? '');
     $password = (string) ($_POST['db_password'] ?? '');
+    $tablePrefix = trim($_POST['table_prefix'] ?? 'ghp_');
     $adminUsername = trim($_POST['admin_username'] ?? 'admin');
     $adminPassword = (string) ($_POST['admin_password'] ?? '');
     $adminNickname = trim($_POST['admin_nickname'] ?? '管理员');
 
     if ($database === '' || $username === '' || $adminUsername === '' || $adminPassword === '') {
         $errors[] = '数据库名、数据库用户、管理员用户名和管理员密码不能为空。';
+    }
+
+    try {
+        $tablePrefix = sanitize_table_prefix($tablePrefix);
+    } catch (Throwable $exception) {
+        $errors[] = $exception->getMessage();
     }
 
     if (!$errors) {
@@ -115,15 +167,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
 
-            foreach (split_sql_statements(file_get_contents(BASE_PATH . '/install/schema.sql')) as $statement) {
+            $schemaSql = prefix_sql_tables(file_get_contents(BASE_PATH . '/install/schema.sql'), $tablePrefix, $baseTables);
+            foreach (split_sql_statements($schemaSql) as $statement) {
                 if ($statement !== '') {
                     $pdo->exec($statement);
                 }
             }
 
             $now = date('Y-m-d H:i:s');
-            $groupStmt = $pdo->prepare('INSERT INTO tag_groups (name, code, description, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)');
-            $tagStmt = $pdo->prepare('INSERT INTO tags (group_id, name, code, description, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
+            $groupStmt = $pdo->prepare('INSERT INTO ' . $tablePrefix . 'tag_groups (name, code, description, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)');
+            $tagStmt = $pdo->prepare('INSERT INTO ' . $tablePrefix . 'tags (group_id, name, code, description, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
             foreach (require BASE_PATH . '/install/seed_tags.php' as $group) {
                 $groupStmt->execute([$group['name'], $group['code'], $group['description'], $group['sort_order'], $now, $now]);
                 $groupId = (int) $pdo->lastInsertId();
@@ -134,10 +187,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $userStmt = $pdo->prepare('INSERT INTO users (username, password_hash, nickname, role, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
+            $userStmt = $pdo->prepare('INSERT INTO ' . $tablePrefix . 'users (username, password_hash, nickname, role, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
             $userStmt->execute([$adminUsername, password_hash($adminPassword, PASSWORD_DEFAULT), $adminNickname, 'admin', 'active', $now, $now]);
 
-            $databaseConfig = "<?php\n\nreturn [\n    'host' => " . var_export($host, true) . ",\n    'port' => " . var_export($port, true) . ",\n    'database' => " . var_export($database, true) . ",\n    'username' => " . var_export($username, true) . ",\n    'password' => " . var_export($password, true) . ",\n];\n";
+            $databaseConfig = "<?php\n\nreturn [\n    'host' => " . var_export($host, true) . ",\n    'port' => " . var_export($port, true) . ",\n    'database' => " . var_export($database, true) . ",\n    'username' => " . var_export($username, true) . ",\n    'password' => " . var_export($password, true) . ",\n    'prefix' => " . var_export($tablePrefix, true) . ",\n];\n";
             $appConfig = "<?php\n\nreturn [\n    'name' => 'Grace Hymn Planner',\n    'locale' => 'zh_CN',\n    'timezone' => 'Asia/Shanghai',\n];\n";
 
             file_put_contents(BASE_PATH . '/config/database.php', $databaseConfig);
@@ -194,6 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label>数据库名<input name="database" value="<?php echo install_e($_POST['database'] ?? ''); ?>" required></label>
                 <label>数据库用户<input name="db_username" value="<?php echo install_e($_POST['db_username'] ?? ''); ?>" required></label>
                 <label>数据库密码<input type="password" name="db_password" value="<?php echo install_e($_POST['db_password'] ?? ''); ?>"></label>
+                <label>数据表前缀<input name="table_prefix" value="<?php echo install_e($_POST['table_prefix'] ?? 'ghp_'); ?>" required></label>
 
                 <h2>管理员账号</h2>
                 <label>用户名<input name="admin_username" value="<?php echo install_e($_POST['admin_username'] ?? 'admin'); ?>" required></label>

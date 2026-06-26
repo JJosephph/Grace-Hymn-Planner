@@ -8,7 +8,7 @@ class File extends Model
 {
     public function findHymnFile(int $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT * FROM hymn_files WHERE id = ? LIMIT 1');
+        $stmt = $this->prepare('SELECT * FROM hymn_files WHERE id = ? LIMIT 1');
         $stmt->execute([$id]);
         $file = $stmt->fetch();
         return $file ?: null;
@@ -16,7 +16,7 @@ class File extends Model
 
     public function createHymnFile(int $hymnId, array $file): int
     {
-        $stmt = $this->db->prepare('INSERT INTO hymn_files (hymn_id, file_type, file_name, original_name, file_path, file_size, mime_type, is_cover, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $stmt = $this->prepare('INSERT INTO hymn_files (hymn_id, file_type, file_name, original_name, file_path, file_size, mime_type, is_cover, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $sortOrder = $this->nextSortOrder($hymnId);
         $stmt->execute([
             $hymnId,
@@ -40,14 +40,14 @@ class File extends Model
             return null;
         }
 
-        $stmt = $this->db->prepare('DELETE FROM hymn_files WHERE id = ?');
+        $stmt = $this->prepare('DELETE FROM hymn_files WHERE id = ?');
         $stmt->execute([$id]);
         return $file;
     }
 
     private function nextSortOrder(int $hymnId): int
     {
-        $stmt = $this->db->prepare('SELECT COALESCE(MAX(sort_order), 0) + 10 AS next_value FROM hymn_files WHERE hymn_id = ?');
+        $stmt = $this->prepare('SELECT COALESCE(MAX(sort_order), 0) + 10 AS next_value FROM hymn_files WHERE hymn_id = ?');
         $stmt->execute([$hymnId]);
         $row = $stmt->fetch();
         return (int) ($row['next_value'] ?? 10);

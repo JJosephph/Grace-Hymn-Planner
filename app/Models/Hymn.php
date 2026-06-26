@@ -131,35 +131,35 @@ class Hymn extends Model
             $sql .= ' ORDER BY h.updated_at DESC';
         }
 
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
     public function latest(int $limit = 6): array
     {
-        $stmt = $this->db->prepare('SELECT id, title_cn, first_line, completeness_status, completeness_score, missing_fields, created_at FROM hymns WHERE status <> "archived" ORDER BY created_at DESC LIMIT ' . (int) $limit);
+        $stmt = $this->prepare('SELECT id, title_cn, first_line, completeness_status, completeness_score, missing_fields, created_at FROM hymns WHERE status <> "archived" ORDER BY created_at DESC LIMIT ' . (int) $limit);
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
     public function incomplete(int $limit = 8): array
     {
-        $stmt = $this->db->prepare('SELECT id, title_cn, completeness_status, completeness_score, missing_fields FROM hymns WHERE completeness_status IN ("draft", "incomplete") AND status <> "archived" ORDER BY updated_at DESC LIMIT ' . (int) $limit);
+        $stmt = $this->prepare('SELECT id, title_cn, completeness_status, completeness_score, missing_fields FROM hymns WHERE completeness_status IN ("draft", "incomplete") AND status <> "archived" ORDER BY updated_at DESC LIMIT ' . (int) $limit);
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
     public function recentUsed(int $limit = 6): array
     {
-        $stmt = $this->db->prepare('SELECT id, title_cn, last_used_at, used_count FROM hymns WHERE last_used_at IS NOT NULL AND status <> "archived" ORDER BY last_used_at DESC LIMIT ' . (int) $limit);
+        $stmt = $this->prepare('SELECT id, title_cn, last_used_at, used_count FROM hymns WHERE last_used_at IS NOT NULL AND status <> "archived" ORDER BY last_used_at DESC LIMIT ' . (int) $limit);
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
     public function counts(): array
     {
-        $row = $this->db->query('SELECT
+        $row = $this->query('SELECT
             COUNT(*) AS total,
             SUM(CASE WHEN completeness_status IN ("draft", "incomplete") THEN 1 ELSE 0 END) AS incomplete_total,
             SUM(CASE WHEN status = "hidden" THEN 1 ELSE 0 END) AS hidden_total
@@ -170,7 +170,7 @@ class Hymn extends Model
 
     public function find(int $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT h.*, t.tune_name, t.tune_name_en, t.composer AS tune_composer, t.meter AS tune_meter, t.key_signature AS tune_key_signature, t.tempo AS tune_tempo
+        $stmt = $this->prepare('SELECT h.*, t.tune_name, t.tune_name_en, t.composer AS tune_composer, t.meter AS tune_meter, t.key_signature AS tune_key_signature, t.tempo AS tune_tempo
                                     FROM hymns h
                                     LEFT JOIN tunes t ON t.id = h.tune_id
                                     WHERE h.id = ? LIMIT 1');
@@ -180,7 +180,7 @@ class Hymn extends Model
             return null;
         }
 
-        $tagStmt = $this->db->prepare('SELECT t.*, g.name AS group_name, g.code AS group_code
+        $tagStmt = $this->prepare('SELECT t.*, g.name AS group_name, g.code AS group_code
                                        FROM hymn_tag ht
                                        INNER JOIN tags t ON t.id = ht.tag_id
                                        INNER JOIN tag_groups g ON g.id = t.group_id
@@ -189,12 +189,12 @@ class Hymn extends Model
         $tagStmt->execute([$id]);
         $hymn['tags'] = $tagStmt->fetchAll();
 
-        $fileStmt = $this->db->prepare('SELECT * FROM hymn_files WHERE hymn_id = ? ORDER BY is_cover DESC, sort_order ASC, id ASC');
+        $fileStmt = $this->prepare('SELECT * FROM hymn_files WHERE hymn_id = ? ORDER BY is_cover DESC, sort_order ASC, id ASC');
         $fileStmt->execute([$id]);
         $hymn['files'] = $fileStmt->fetchAll();
 
         if (!empty($hymn['tune_id'])) {
-            $sameTune = $this->db->prepare('SELECT id, title_cn, first_line FROM hymns WHERE tune_id = ? AND id <> ? AND status <> "archived" ORDER BY title_cn ASC');
+            $sameTune = $this->prepare('SELECT id, title_cn, first_line FROM hymns WHERE tune_id = ? AND id <> ? AND status <> "archived" ORDER BY title_cn ASC');
             $sameTune->execute([$hymn['tune_id'], $id]);
             $hymn['same_tune_hymns'] = $sameTune->fetchAll();
         } else {
@@ -210,7 +210,7 @@ class Hymn extends Model
         $columns = array_keys($record);
         $placeholders = implode(',', array_fill(0, count($columns), '?'));
         $sql = 'INSERT INTO hymns (' . implode(',', $columns) . ') VALUES (' . $placeholders . ')';
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->prepare($sql);
         $stmt->execute(array_values($record));
         $id = (int) $this->db->lastInsertId();
         $this->syncTags($id, $tagIds);
@@ -226,7 +226,7 @@ class Hymn extends Model
             $sets[] = $column . ' = ?';
         }
         $sql = 'UPDATE hymns SET ' . implode(', ', $sets) . ' WHERE id = ?';
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->prepare($sql);
         $values = array_values($record);
         $values[] = $id;
         $stmt->execute($values);
@@ -236,29 +236,29 @@ class Hymn extends Model
 
     public function setStatus(int $id, string $status): void
     {
-        $stmt = $this->db->prepare('UPDATE hymns SET status = ?, updated_at = ? WHERE id = ?');
+        $stmt = $this->prepare('UPDATE hymns SET status = ?, updated_at = ? WHERE id = ?');
         $stmt->execute([$status, $this->now(), $id]);
     }
 
     public function refreshCompleteness(int $id): void
     {
-        $stmt = $this->db->prepare('SELECT * FROM hymns WHERE id = ?');
+        $stmt = $this->prepare('SELECT * FROM hymns WHERE id = ?');
         $stmt->execute([$id]);
         $hymn = $stmt->fetch();
         if (!$hymn) {
             return;
         }
 
-        $tagsStmt = $this->db->prepare('SELECT t.id, g.code AS group_code FROM hymn_tag ht INNER JOIN tags t ON t.id = ht.tag_id INNER JOIN tag_groups g ON g.id = t.group_id WHERE ht.hymn_id = ?');
+        $tagsStmt = $this->prepare('SELECT t.id, g.code AS group_code FROM hymn_tag ht INNER JOIN tags t ON t.id = ht.tag_id INNER JOIN tag_groups g ON g.id = t.group_id WHERE ht.hymn_id = ?');
         $tagsStmt->execute([$id]);
         $tags = $tagsStmt->fetchAll();
 
-        $filesStmt = $this->db->prepare('SELECT id FROM hymn_files WHERE hymn_id = ?');
+        $filesStmt = $this->prepare('SELECT id FROM hymn_files WHERE hymn_id = ?');
         $filesStmt->execute([$id]);
         $files = $filesStmt->fetchAll();
 
         $completeness = calculateHymnCompleteness($hymn, $tags, $files);
-        $update = $this->db->prepare('UPDATE hymns SET completeness_score = ?, completeness_status = ?, missing_fields = ?, updated_at = ? WHERE id = ?');
+        $update = $this->prepare('UPDATE hymns SET completeness_score = ?, completeness_status = ?, missing_fields = ?, updated_at = ? WHERE id = ?');
         $update->execute([
             $completeness['score'],
             $completeness['status'],
@@ -276,7 +276,7 @@ class Hymn extends Model
 
         $placeholders = implode(',', array_fill(0, count($hymnIds), '?'));
         $params = array_merge([$this->now()], array_values($hymnIds));
-        $stmt = $this->db->prepare("UPDATE hymns SET last_used_at = ?, used_count = used_count + 1 WHERE id IN ($placeholders)");
+        $stmt = $this->prepare("UPDATE hymns SET last_used_at = ?, used_count = used_count + 1 WHERE id IN ($placeholders)");
         $stmt->execute($params);
     }
 
@@ -322,14 +322,14 @@ class Hymn extends Model
     private function syncTags(int $hymnId, array $tagIds): void
     {
         $tagIds = array_values(array_unique(array_filter(array_map('intval', $tagIds))));
-        $delete = $this->db->prepare('DELETE FROM hymn_tag WHERE hymn_id = ?');
+        $delete = $this->prepare('DELETE FROM hymn_tag WHERE hymn_id = ?');
         $delete->execute([$hymnId]);
 
         if (!$tagIds) {
             return;
         }
 
-        $stmt = $this->db->prepare('INSERT INTO hymn_tag (hymn_id, tag_id, created_at) VALUES (?, ?, ?)');
+        $stmt = $this->prepare('INSERT INTO hymn_tag (hymn_id, tag_id, created_at) VALUES (?, ?, ?)');
         $now = $this->now();
         foreach ($tagIds as $tagId) {
             $stmt->execute([$hymnId, $tagId, $now]);

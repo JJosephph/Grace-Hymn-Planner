@@ -8,7 +8,7 @@ class User extends Model
 {
     public function findByUsername(string $username): ?array
     {
-        $stmt = $this->db->prepare('SELECT * FROM users WHERE username = ? LIMIT 1');
+        $stmt = $this->prepare('SELECT * FROM users WHERE username = ? LIMIT 1');
         $stmt->execute([$username]);
         $user = $stmt->fetch();
         return $user ?: null;
@@ -16,7 +16,7 @@ class User extends Model
 
     public function touchLastLogin(int $id): void
     {
-        $stmt = $this->db->prepare('UPDATE users SET last_login_at = ?, updated_at = ? WHERE id = ?');
+        $stmt = $this->prepare('UPDATE users SET last_login_at = ?, updated_at = ? WHERE id = ?');
         $now = $this->now();
         $stmt->execute([$now, $now, $id]);
     }
