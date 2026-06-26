@@ -68,8 +68,7 @@ CREATE TABLE hymns (
   KEY idx_completeness_status (completeness_status),
   KEY idx_familiarity (familiarity),
   KEY idx_difficulty (difficulty),
-  KEY idx_last_used_at (last_used_at),
-  CONSTRAINT fk_hymns_tune FOREIGN KEY (tune_id) REFERENCES tunes(id) ON DELETE SET NULL
+  KEY idx_last_used_at (last_used_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='圣诗主表';
 
 CREATE TABLE tag_groups (
@@ -97,8 +96,7 @@ CREATE TABLE tags (
   PRIMARY KEY (id),
   UNIQUE KEY uk_group_code (group_id, code),
   KEY idx_group_id (group_id),
-  KEY idx_sort_order (sort_order),
-  CONSTRAINT fk_tags_group FOREIGN KEY (group_id) REFERENCES tag_groups(id) ON DELETE CASCADE
+  KEY idx_sort_order (sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='标签表';
 
 CREATE TABLE hymn_tag (
@@ -106,9 +104,7 @@ CREATE TABLE hymn_tag (
   tag_id INT UNSIGNED NOT NULL COMMENT '标签ID',
   created_at DATETIME NOT NULL COMMENT '创建时间',
   PRIMARY KEY (hymn_id, tag_id),
-  KEY idx_tag_id (tag_id),
-  CONSTRAINT fk_hymn_tag_hymn FOREIGN KEY (hymn_id) REFERENCES hymns(id) ON DELETE CASCADE,
-  CONSTRAINT fk_hymn_tag_tag FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+  KEY idx_tag_id (tag_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='圣诗与标签关联表';
 
 CREATE TABLE hymn_files (
@@ -125,8 +121,7 @@ CREATE TABLE hymn_files (
   created_at DATETIME NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id),
   KEY idx_hymn_id (hymn_id),
-  KEY idx_file_type (file_type),
-  CONSTRAINT fk_hymn_files_hymn FOREIGN KEY (hymn_id) REFERENCES hymns(id) ON DELETE CASCADE
+  KEY idx_file_type (file_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='圣诗附件表';
 
 CREATE TABLE tune_files (
@@ -142,8 +137,7 @@ CREATE TABLE tune_files (
   created_at DATETIME NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id),
   KEY idx_tune_id (tune_id),
-  KEY idx_file_type (file_type),
-  CONSTRAINT fk_tune_files_tune FOREIGN KEY (tune_id) REFERENCES tunes(id) ON DELETE CASCADE
+  KEY idx_file_type (file_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='曲调附件表';
 
 CREATE TABLE service_plans (
@@ -176,9 +170,7 @@ CREATE TABLE service_plan_items (
   KEY idx_plan_id (service_plan_id),
   KEY idx_hymn_id (hymn_id),
   KEY idx_slot_type (slot_type),
-  KEY idx_item_status (item_status),
-  CONSTRAINT fk_plan_items_plan FOREIGN KEY (service_plan_id) REFERENCES service_plans(id) ON DELETE CASCADE,
-  CONSTRAINT fk_plan_items_hymn FOREIGN KEY (hymn_id) REFERENCES hymns(id) ON DELETE CASCADE
+  KEY idx_item_status (item_status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='崇拜计划诗歌项表，包含候选与已选诗歌';
 
 CREATE TABLE settings (
@@ -204,7 +196,5 @@ CREATE TABLE activity_logs (
   KEY idx_user_id (user_id),
   KEY idx_action (action),
   KEY idx_target (target_type, target_id),
-  KEY idx_created_at (created_at),
-  CONSTRAINT fk_activity_logs_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+  KEY idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='操作日志表';
-
